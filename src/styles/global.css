@@ -1,0 +1,1225 @@
+/* ============================================================
+   Ghostty × Claude Code — Theme Visualizer
+   Two color worlds live here:
+   1. The APP CHROME — a fixed dark-cyber palette (neon cyan/magenta).
+   2. The TERMINALS — each renders in a real Ghostty theme via --c0..--c15.
+      Role classes (.r-*) map Claude Code's UI roles onto those slots.
+   ============================================================ */
+
+:root {
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", Menlo,
+    Monaco, Consolas, monospace;
+
+  /* Cyber chrome */
+  --bg-0: #07080d;
+  --bg-1: #0c0e16;
+  --bg-2: #11141f;
+  --line: #1d2233;
+  --ink: #c7d0e0;
+  --ink-dim: #6b7490;
+  --neon: #2de2e6;   /* cyan */
+  --neon-2: #ff2e97; /* magenta */
+  --neon-3: #b14aed; /* violet */
+  --anthropic: #d97757; /* Anthropic / Claude brand orange */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-color: var(--neon-3) var(--bg-1);
+}
+
+body {
+  margin: 0;
+  font-family: var(--mono);
+  background:
+    radial-gradient(1100px 600px at 80% -10%, rgba(177, 74, 237, 0.12), transparent 60%),
+    radial-gradient(900px 500px at 0% 0%, rgba(45, 226, 230, 0.1), transparent 55%),
+    var(--bg-0);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+body.no-scroll {
+  overflow: hidden;
+}
+
+/* --- Scanlines / glow FX (toggleable) ------------------------------- */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.025) 0,
+    rgba(255, 255, 255, 0.025) 1px,
+    transparent 2px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+}
+body.fx-off .scanlines {
+  display: none;
+}
+body.fx-off .terminal,
+body.fx-off .masthead h1 {
+  text-shadow: none;
+}
+body.fx-off .theme-card .terminal {
+  box-shadow: 0 1px 0 var(--line);
+}
+
+/* --- Masthead ------------------------------------------------------- */
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem clamp(1rem, 4vw, 3rem) 1rem;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.brand .glyph {
+  font-size: 2rem;
+  color: var(--neon);
+  text-shadow: 0 0 18px var(--neon);
+  letter-spacing: -4px;
+}
+.masthead h1 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.6vw, 1.7rem);
+  letter-spacing: 3px;
+  font-weight: 800;
+  text-wrap: balance;
+  background: linear-gradient(90deg, var(--neon), #fff 60%, var(--neon-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 30px rgba(45, 226, 230, 0.25);
+}
+.masthead h1 .x {
+  color: var(--neon-2);
+  -webkit-text-fill-color: var(--neon-2);
+}
+.masthead h1 .cc {
+  color: var(--anthropic);
+  -webkit-text-fill-color: var(--anthropic);
+  text-shadow: 0 0 24px rgba(217, 119, 87, 0.35);
+}
+.sub {
+  margin: 0.25rem 0 0;
+  color: var(--ink-dim);
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+  text-wrap: pretty;
+}
+.byline {
+  margin: 0.3rem 0 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.5px;
+  color: var(--ink-dim);
+}
+.byline a {
+  color: var(--anthropic);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.byline a:hover {
+  color: var(--neon);
+  border-bottom-color: currentColor;
+}
+.fx-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  padding: 0.5rem 0.85rem;
+  min-height: 40px; /* comfortable hit target */
+  border-radius: 0;
+  cursor: pointer;
+  transition: scale 0.1s ease, border-color 0.15s ease, background 0.15s ease,
+    color 0.15s ease;
+}
+.fx-toggle:active {
+  scale: 0.96; /* tactile press feedback */
+}
+/* Icon-only variant: square-ish, larger glyph, no text. */
+.fx-toggle.icon-only {
+  padding: 0.5rem 0.7rem;
+  min-width: 40px;
+  line-height: 1;
+}
+.fx-toggle.icon-only #cols-ico {
+  display: inline-flex;
+}
+.fx-toggle svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.scroll-top svg {
+  width: 22px;
+  height: 22px;
+}
+.fx-toggle .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 0;
+  background: var(--neon);
+  box-shadow: 0 0 10px var(--neon);
+}
+.fx-toggle[aria-pressed="false"] .dot {
+  background: var(--ink-dim);
+  box-shadow: none;
+}
+.head-toggles {
+  display: flex;
+  gap: 0.5rem;
+}
+.fx-toggle.vt[aria-pressed="true"] {
+  border-color: var(--neon-2);
+  color: #fff;
+}
+.fx-toggle.vt[aria-pressed="true"] .dot {
+  background: var(--neon-2);
+  box-shadow: 0 0 10px var(--neon-2);
+}
+
+/* --- Controls ------------------------------------------------------- */
+.controls {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  padding: 0.9rem clamp(1rem, 4vw, 3rem);
+  background: rgba(7, 8, 13, 0.82);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.tab {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 0;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.tab:hover {
+  color: var(--ink);
+  border-color: var(--neon-3);
+}
+.tab.active {
+  color: var(--bg-0);
+  background: var(--neon);
+  border-color: var(--neon);
+  box-shadow: 0 0 16px rgba(45, 226, 230, 0.4);
+}
+.tab-icon {
+  opacity: 0.9;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+#search {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  padding: 0.45rem 0.75rem;
+  min-height: 40px;
+  width: 200px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+#search:focus {
+  outline: none;
+  border-color: var(--neon);
+  box-shadow: 0 0 0 2px rgba(45, 226, 230, 0.2);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* --- Font picker --------------------------------------------------- */
+.font-picker {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.font-label {
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.font-select {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  padding: 0.45rem 0.6rem;
+  min-height: 40px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.font-select:hover {
+  border-color: var(--neon-3);
+}
+.font-select:focus {
+  outline: none;
+  border-color: var(--neon);
+  box-shadow: 0 0 0 2px rgba(45, 226, 230, 0.2);
+}
+.font-select optgroup {
+  background: var(--bg-1);
+  color: var(--ink-dim);
+  font-style: normal;
+}
+.font-select option {
+  background: var(--bg-1);
+  color: var(--ink);
+}
+.chip {
+  position: relative;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 0;
+  cursor: pointer;
+  transition: scale 0.1s ease, color 0.15s ease, border-color 0.15s ease;
+}
+/* Extend the hit area to ~40px tall without changing the visual size. */
+.chip::before {
+  content: "";
+  position: absolute;
+  inset: -9px 0;
+}
+.chip:hover {
+  color: var(--ink);
+}
+.chip:active {
+  scale: 0.96;
+}
+.chip.active {
+  color: var(--neon-2);
+  border-color: var(--neon-2);
+  box-shadow: 0 0 12px rgba(255, 46, 151, 0.25);
+}
+
+/* --- Gallery -------------------------------------------------------- */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.4rem;
+  padding: 1.4rem clamp(1rem, 4vw, 3rem) 3rem;
+}
+.gallery[data-cols="1"] {
+  grid-template-columns: 1fr;
+  max-width: 900px;
+  margin: 0 auto;
+}
+/* Real session, 1 column: big and roomy, centered. */
+.gallery[data-active="realcast"][data-cols="1"] {
+  max-width: 1320px;
+  margin: 0 auto;
+}
+.gallery[data-active="realcast"][data-cols="1"] .real-html {
+  font-size: 1rem;
+  line-height: 1.85;
+}
+/* Real session, 2 columns: use the full page width; scale text so the 120-col
+   capture fits in half the viewport (scrolls horizontally on narrow screens). */
+.gallery[data-active="realcast"][data-cols="2"] .real-html {
+  font-size: clamp(0.5rem, 0.62vw, 0.92rem);
+  line-height: 1.7;
+  padding: 0.9rem 1.1rem;
+}
+.empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--ink-dim);
+  padding: 3rem;
+}
+
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0;
+  background: none;
+  border: none;
+  text-align: left;
+  font-family: var(--mono);
+}
+.theme-card[hidden] {
+  display: none;
+}
+
+/* --- Terminal (themed surface) ------------------------------------- */
+.terminal {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 22px rgba(45, 226, 230, 0.06);
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+/* Subtle lift when hovering a card whose Compare button is focused/hovered. */
+.theme-card:has(.compare-btn:hover) .terminal {
+  box-shadow:
+    0 0 0 1px var(--neon-3),
+    0 16px 38px rgba(0, 0, 0, 0.6),
+    0 0 28px rgba(177, 74, 237, 0.25);
+}
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.7rem;
+  background: color-mix(in srgb, var(--fg) 6%, var(--bg));
+  border-bottom: 1px solid color-mix(in srgb, var(--fg) 10%, transparent);
+}
+.lights {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+.lights i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%; /* macOS window controls stay circular */
+  display: inline-block;
+}
+.l-red {
+  background: #ff5f56;
+}
+.l-yellow {
+  background: #ffbd2e;
+}
+.l-green {
+  background: #27c93f;
+}
+.tab-title {
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--fg) 60%, var(--bg));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.body {
+  padding: 1.1rem 1.2rem;
+  font-size: 1.12rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 220px;
+}
+
+/* Real-VT mount: hidden until "Real VT" mode is on, then it replaces the
+   CSS approximation. The canvas ghostty-web injects fills the width. */
+.body-real {
+  display: none;
+  padding: 0.6rem 0.7rem;
+  min-height: 190px;
+}
+.body-real canvas {
+  max-width: 100%;
+  display: block;
+}
+body.real-vt .theme-card .body {
+  display: none;
+}
+body.real-vt .theme-card .body-real {
+  display: block;
+}
+/* In real mode the sample tabs are driven by re-writing the stream, so the
+   CSS sample filter is irrelevant; nothing to toggle here. */
+.row {
+  min-height: 1.2em;
+}
+
+/* --- Real session (HTML render of the captured ANSI) --------------- */
+.real-html {
+  display: none;
+  padding: 1.2rem 1.4rem;
+  /* --session-font is set by the font picker; falls back to the system stack. */
+  font-family: var(--session-font, var(--mono));
+  font-size: 1rem;
+  line-height: 1.85; /* the breathing room the canvas VT can't give */
+  white-space: pre;
+  overflow-x: auto;
+  color: var(--fg);
+  background: var(--bg);
+  tab-size: 4;
+}
+/* In real-session mode, hide the curated/canvas bodies, show the HTML.
+   The body.real-vt rule for .body-real is more specific, so match it. */
+.gallery[data-active="realcast"] .body,
+.gallery[data-active="realcast"] .body-real,
+body.real-vt .gallery[data-active="realcast"] .body-real {
+  display: none;
+}
+.gallery[data-active="realcast"] .real-html {
+  display: block;
+}
+.modal-body .real-html.detail-realhtml {
+  display: block;
+  border-radius: 0;
+}
+
+/* --- Diff / plan line backgrounds ---------------------------------- */
+.line-added {
+  background: color-mix(in srgb, var(--c2) 16%, transparent);
+}
+.line-removed {
+  background: color-mix(in srgb, var(--c1) 16%, transparent);
+}
+.line-context {
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+}
+/* User prompt: rendered with the theme's real selection colors, full-width,
+   the way Claude Code highlights the message you just sent. */
+.line-user {
+  background: var(--sel-bg);
+  margin: 0 -1.1rem 0.2rem;
+  padding: 0.1rem 1.1rem;
+}
+.line-user span {
+  color: var(--sel-fg);
+}
+
+/* ============================================================
+   ROLE → ANSI MAPPING  (Claude Code UI role → theme palette slot)
+   This is the single source of truth for the approximation.
+   ============================================================ */
+.r-dim     { color: var(--c8); }
+.r-bold    { color: var(--fg); font-weight: 700; }
+.r-added   { color: var(--c2); }
+.r-removed { color: var(--c1); }
+.r-success { color: var(--c2); }
+.r-error   { color: var(--c1); }
+.r-warning { color: var(--c3); }
+.r-number  { color: var(--c3); }
+.r-tool    { color: var(--c6); }
+.r-info    { color: var(--c4); }
+.r-path    { color: var(--c4); text-decoration: underline; text-underline-offset: 2px; }
+.r-accent  { color: var(--c6); }
+.r-prompt  { color: var(--c4); font-weight: 700; }
+.r-agent   { color: var(--c5); }
+.r-thinking { color: var(--c8); font-style: italic; }
+
+/* --- Sample switching (gallery shows one; modal shows all) ---------- */
+.terminal .sample {
+  display: none;
+}
+.gallery[data-active="all"]      .sample[data-sample="all"],
+.gallery[data-active="tool"]     .sample[data-sample="tool"],
+.gallery[data-active="diff"]     .sample[data-sample="diff"],
+.gallery[data-active="plan"]     .sample[data-sample="plan"],
+.gallery[data-active="thinking"] .sample[data-sample="thinking"],
+.gallery[data-active="agents"]   .sample[data-sample="agents"],
+.gallery[data-active="summary"]  .sample[data-sample="summary"] {
+  display: block;
+}
+
+.card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0 0.2rem;
+}
+.theme-name {
+  font-size: 0.78rem;
+  color: var(--ink);
+  letter-spacing: 0.3px;
+}
+
+/* --- Contrast (readability) badge ---------------------------------- */
+.legib-badge {
+  --grade: var(--ink-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 0.18rem 0.4rem 0.18rem 0.18rem;
+  border: 1px solid var(--grade);
+  color: var(--grade);
+  cursor: help;
+  white-space: nowrap;
+}
+/* The grade letter: dark glyph punched out of the accent-colored chip. */
+.legib-badge .lg-grade {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25em;
+  height: 1.25em;
+  padding: 0 0.15em;
+  background: var(--grade);
+  color: var(--bg-0);
+  font-weight: 800;
+}
+.legib-badge.grade-A {
+  --grade: #3ddc84;
+}
+.legib-badge.grade-B {
+  --grade: #8bd450;
+}
+.legib-badge.grade-C {
+  --grade: #e7c454;
+}
+.legib-badge.grade-D {
+  --grade: #e69138;
+}
+.legib-badge.grade-F {
+  --grade: var(--neon-2);
+}
+.legib-badge.low {
+  border-style: dashed;
+}
+
+/* --- Contrast row: grade badge + per-role breakdown, above buttons -- */
+.legib-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0 0.2rem;
+  margin-bottom: 0.45rem;
+  cursor: help;
+}
+.legib-row .legib-breakdown {
+  flex: 1;
+  padding: 0;
+}
+
+/* --- Contrast breakdown (per-role mini meters) --------------------- */
+.legib-breakdown {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  padding: 0.1rem 0.2rem 0;
+}
+.lb-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lb-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.62rem;
+  letter-spacing: 0.3px;
+  color: var(--ink-dim);
+  text-transform: uppercase;
+}
+.lb-head .lb-val {
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.lb-track {
+  height: 4px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.lb-fill {
+  height: 100%;
+}
+.lb-fill.good {
+  background: #3ddc84;
+}
+.lb-fill.ok {
+  background: #e7c454;
+}
+.lb-fill.bad {
+  background: var(--neon-2);
+}
+.swatch {
+  display: inline-flex;
+  gap: 2px;
+}
+.swatch i {
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  display: inline-block;
+}
+
+/* --- Modal --------------------------------------------------------- */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 3rem);
+}
+.modal[hidden] {
+  display: none;
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(3, 4, 8, 0.78);
+  backdrop-filter: blur(6px);
+}
+.modal-panel {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  background: var(--bg-1);
+  border: 1px solid var(--neon-3);
+  border-radius: 0;
+  box-shadow: 0 0 50px rgba(177, 74, 237, 0.35);
+}
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  background: var(--bg-1);
+}
+.modal-title {
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--neon);
+}
+.modal-close {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-dim);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  padding: 0.5rem 0.7rem;
+  min-height: 40px;
+  border-radius: 0;
+  cursor: pointer;
+  transition: scale 0.1s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.modal-close:active {
+  scale: 0.96;
+}
+.modal-close:hover {
+  color: var(--neon-2);
+  border-color: var(--neon-2);
+}
+.modal-body {
+  padding: 1.1rem;
+}
+.modal-body .terminal {
+  transform: none;
+}
+.modal-body .terminal.detail .sample {
+  display: block;
+  padding-top: 0.7rem;
+  margin-top: 0.7rem;
+  border-top: 1px dashed color-mix(in srgb, var(--fg) 16%, transparent);
+}
+.modal-body .terminal.detail .sample:first-of-type {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+}
+.modal-body .terminal.detail .body {
+  font-size: 0.82rem;
+}
+.modal-pal {
+  display: flex;
+  gap: 3px;
+  padding: 0 1.1rem 1.1rem;
+  flex-wrap: wrap;
+}
+.modal-pal i {
+  width: 26px;
+  height: 18px;
+  border-radius: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* --- Import dialog + featured card --------------------------------- */
+.fx-toggle.import {
+  color: var(--neon-3);
+  border-color: var(--neon-3);
+}
+.fx-toggle.import:hover {
+  background: rgba(177, 74, 237, 0.12);
+}
+.fx-toggle.import .plus {
+  font-size: 1rem;
+  line-height: 1;
+}
+.import-panel {
+  width: min(620px, 100%);
+}
+.import-body {
+  padding: 1.1rem;
+}
+.import-hint {
+  margin: 0 0 0.8rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  color: var(--ink-dim);
+}
+.import-hint code,
+.import-msg code {
+  font-family: var(--mono);
+  color: var(--neon);
+  background: var(--bg-2);
+  padding: 0.05rem 0.3rem;
+  border-radius: 0;
+}
+.import-hint strong {
+  color: var(--ink);
+}
+#import-text {
+  width: 100%;
+  min-height: 200px;
+  resize: vertical;
+  background: var(--bg-0);
+  border: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--ink);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  padding: 0.8rem;
+}
+#import-text:focus {
+  outline: none;
+  border-color: var(--neon-3);
+  box-shadow: 0 0 0 2px rgba(177, 74, 237, 0.2);
+}
+.import-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-top: 0.8rem;
+}
+.file-btn {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--ink-dim);
+  border: 1px dashed var(--line);
+  border-radius: 0;
+  padding: 0.5rem 0.85rem;
+  min-height: 40px;
+  cursor: pointer;
+  transition: scale 0.1s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.file-btn:hover {
+  color: var(--ink);
+  border-color: var(--neon-3);
+}
+.file-btn:active {
+  scale: 0.96;
+}
+.load-btn {
+  background: var(--neon-3);
+  border: none;
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.55rem 1.1rem;
+  min-height: 40px;
+  border-radius: 0;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(177, 74, 237, 0.4);
+  transition: scale 0.1s ease, filter 0.15s ease;
+}
+.load-btn:hover {
+  filter: brightness(1.1);
+}
+.load-btn:active {
+  scale: 0.96;
+}
+.import-msg {
+  margin: 0.8rem 0 0;
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+.import-msg.err {
+  color: var(--neon-2);
+}
+
+/* The user's own theme, pinned at the top of the gallery. */
+.theme-card.featured .terminal {
+  box-shadow:
+    0 0 0 1px var(--neon-3),
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 26px rgba(177, 74, 237, 0.35);
+}
+.theme-card.featured .theme-name {
+  color: var(--neon-3);
+  font-weight: 700;
+}
+
+/* --- Footer -------------------------------------------------------- */
+/* --- Compare button (card foot) ------------------------------------ */
+.compare-btn {
+  position: relative;
+  background: transparent;
+  border: 1px solid var(--neon-3);
+  color: var(--neon-3);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 0.45rem 0.95rem;
+  min-height: 36px;
+  border-radius: 0;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(177, 74, 237, 0.18);
+  transition: scale 0.1s ease, background 0.15s ease, box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+.compare-btn:hover {
+  background: rgba(177, 74, 237, 0.12);
+  box-shadow: 0 0 22px rgba(177, 74, 237, 0.5);
+}
+.compare-btn:active {
+  scale: 0.96;
+}
+/* --- Handoff button (card foot): cyan, the "apply this theme" action ---- */
+.handoff-btn {
+  position: relative;
+  background: transparent;
+  border: 1px solid var(--neon);
+  color: var(--neon);
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 0.45rem 0.95rem;
+  min-height: 36px;
+  border-radius: 0;
+  cursor: pointer;
+  box-shadow: 0 0 14px rgba(45, 226, 230, 0.18);
+  transition: scale 0.1s ease, background 0.15s ease, box-shadow 0.15s ease,
+    color 0.15s ease;
+}
+.handoff-btn:hover {
+  background: rgba(45, 226, 230, 0.12);
+  box-shadow: 0 0 22px rgba(45, 226, 230, 0.4);
+}
+.handoff-btn:active {
+  scale: 0.96;
+}
+/* Brief inline "Copied ✓" state after a click (no toast). */
+.handoff-btn.copied {
+  background: var(--neon);
+  color: var(--bg-0);
+  border-color: var(--neon);
+}
+.theme-name {
+  margin-right: auto; /* push buttons + swatch to the right */
+}
+
+/* --- Compare view --------------------------------------------------- */
+.compare {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  background: var(--bg-0);
+}
+.compare[hidden] {
+  display: none;
+}
+.compare-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem clamp(1rem, 3vw, 2rem);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-1);
+}
+.compare-title {
+  font-size: 0.85rem;
+  color: var(--ink);
+  letter-spacing: 0.3px;
+}
+.compare-title strong {
+  color: var(--neon);
+}
+.compare-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.compare-hint {
+  color: var(--ink-dim);
+  font-size: 0.74rem;
+}
+.compare-cols {
+  flex: 1;
+  min-height: 0; /* let the scroll containers actually scroll */
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--line); /* thin divider between the two columns */
+}
+.compare-side {
+  overflow-y: auto;
+  background: var(--bg-0);
+  padding: 1rem clamp(0.8rem, 2vw, 1.4rem);
+}
+.compare-left {
+  position: relative;
+}
+.compare-right {
+  scroll-snap-type: y mandatory;
+  /* land snapped cards at the same top offset as the fixed left column */
+  scroll-padding-top: 1rem;
+}
+.cmp-card {
+  margin-bottom: 1rem;
+}
+.cmp-card:last-child {
+  margin-bottom: 30vh; /* let the last theme snap to the top too */
+}
+.cmp-card.snap {
+  scroll-snap-align: start;
+}
+.cmp-card .real-html {
+  display: block;
+  font-size: clamp(0.5rem, 0.58vw, 0.86rem);
+  line-height: 1.6;
+}
+
+.foot {
+  border-top: 1px solid var(--line);
+  padding: 1.4rem clamp(1rem, 4vw, 3rem) 3rem;
+  color: var(--ink-dim);
+  font-size: 0.76rem;
+  line-height: 1.6;
+  max-width: 70ch;
+  text-wrap: pretty;
+}
+.foot em {
+  color: var(--ink);
+  font-style: normal;
+  text-decoration: underline dotted;
+}
+.foot strong {
+  color: var(--ink);
+}
+.foot code {
+  font-family: var(--mono);
+  color: var(--neon);
+  background: var(--bg-2);
+  padding: 0.05rem 0.35rem;
+  border-radius: 0;
+  font-size: 0.95em;
+}
+.foot-dim {
+  color: #4d556e;
+  margin-top: 0.8rem;
+}
+.ansi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.4rem;
+  padding: 0.08rem 0.45rem;
+  border: 1px solid var(--neon-3);
+  border-radius: 0;
+  color: var(--neon);
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+}
+.ansi-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 0;
+  background: var(--neon);
+  box-shadow: 0 0 8px var(--neon);
+}
+
+/* --- Floating scroll-to-top --------------------------------------- */
+.scroll-top {
+  position: fixed;
+  right: clamp(1rem, 3vw, 2rem);
+  bottom: clamp(1rem, 3vw, 2rem);
+  z-index: 45;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: var(--bg-1);
+  border: 1px solid var(--neon);
+  color: var(--neon);
+  font-family: var(--mono);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(45, 226, 230, 0.3);
+  opacity: 0;
+  transform: translateY(0.6rem);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.15s ease,
+    background 0.15s ease, scale 0.1s ease;
+}
+.scroll-top.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.scroll-top:hover {
+  background: rgba(45, 226, 230, 0.12);
+  box-shadow: 0 0 26px rgba(45, 226, 230, 0.5);
+}
+.scroll-top:active {
+  scale: 0.96;
+}
+
+@media (max-width: 768px) {
+  /* Header: stack brand over the toggles, let toggles wrap. */
+  .masthead {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+    padding: 1rem 1rem 0.8rem;
+  }
+  .brand .glyph {
+    font-size: 1.5rem;
+  }
+  .masthead h1 {
+    font-size: 1.15rem;
+  }
+  .head-toggles {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .head-toggles .fx-toggle {
+    flex: 1 1 auto;
+    justify-content: center;
+    min-height: 40px; /* comfortable tap target */
+  }
+  /* The 1/2-column toggle is meaningless on phones (always 1 col) — hide it. */
+  #cols-toggle {
+    display: none;
+  }
+
+  /* Controls: search full width, chips scroll horizontally instead of wrapping
+     into a tall block. */
+  .controls {
+    gap: 0.7rem;
+    padding: 0.7rem 1rem;
+  }
+  .filters {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+  #search {
+    width: 100%;
+  }
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.2rem;
+  }
+  .chip {
+    flex: 0 0 auto;
+  }
+
+  /* Compare on phones: stack the fixed theme on top, snap-list below. */
+  .compare-cols {
+    grid-template-columns: 1fr;
+    grid-template-rows: 42dvh 1fr;
+    gap: 1px 0;
+  }
+  .cmp-card .real-html {
+    font-size: clamp(0.6rem, 2.5vw, 1rem);
+    line-height: 1.65;
+  }
+  .compare-hint {
+    display: none;
+  }
+
+  .gallery {
+    grid-template-columns: 1fr;
+  }
+  /* Real session on phones: single column, narrow (62-col) capture, font
+     sized so it fits the viewport without a tiny scroll. */
+  .gallery[data-active="realcast"],
+  .gallery[data-active="realcast"][data-cols="1"],
+  .gallery[data-active="realcast"][data-cols="2"] {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+  .gallery[data-active="realcast"][data-cols="1"] .real-html,
+  .gallery[data-active="realcast"][data-cols="2"] .real-html {
+    font-size: clamp(0.62rem, 2.7vw, 1rem);
+    line-height: 1.7;
+    padding: 0.9rem 0.9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-card:hover .terminal {
+    transform: none;
+  }
+}

@@ -1,0 +1,64 @@
+---
+import { themeVars } from '../lib/render.js';
+
+const { theme } = Astro.props;
+const swatch = theme.palette.slice(8, 16); // bright row reads best as a chip
+const lg = theme.legibility;
+const lgTitle =
+  `Contrast ${lg.score}/100 (${lg.grade}) — ` +
+  `body ${lg.sub.body} · dim ${lg.sub.dim} · accents ${lg.sub.accents} · prompt ${lg.sub.prompt}` +
+  (lg.lowContrast ? ' · ⚠ low body/prompt contrast' : '');
+const subs = [
+  ['Body', lg.sub.body],
+  ['Dim', lg.sub.dim],
+  ['Accents', lg.sub.accents],
+  ['Prompt', lg.sub.prompt],
+];
+const subClass = (v) => (v >= 70 ? 'good' : v >= 40 ? 'ok' : 'bad');
+---
+
+<div
+  class="theme-card"
+  data-name={theme.name}
+  data-tags={theme.tags.join(' ')}
+  data-score={lg.score}
+>
+  <div class="terminal" style={themeVars(theme)}>
+    <div class="titlebar">
+      <span class="lights" aria-hidden="true">
+        <i class="l-red"></i><i class="l-yellow"></i><i class="l-green"></i>
+      </span>
+      <span class="tab-title">{theme.name}</span>
+    </div>
+    <!-- The real Claude Code session, themed; filled by the page script. -->
+    <div class="real-html"></div>
+  </div>
+  <div class="legib-row" title={lgTitle}>
+    <span class={`legib-badge grade-${lg.grade}${lg.lowContrast ? ' low' : ''}`}>
+      <span class="lg-grade">{lg.grade}</span>{lg.score}{lg.lowContrast ? ' ⚠' : ''}
+    </span>
+    <div class="legib-breakdown">
+      {
+        subs.map(([label, v]) => (
+          <div class="lb-item">
+            <div class="lb-head">
+              <span>{label}</span>
+              <span class="lb-val">{v}</span>
+            </div>
+            <div class="lb-track">
+              <div class={`lb-fill ${subClass(v)}`} style={`width:${v}%`} />
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+  <div class="card-foot">
+    <span class="theme-name">{theme.name}</span>
+    <button class="compare-btn" type="button">Compare this theme</button>
+    <button class="handoff-btn" type="button">Handoff to Claude</button>
+    <span class="swatch" aria-hidden="true">
+      {swatch.map((c) => <i style={`background:${c}`}></i>)}
+    </span>
+  </div>
+</div>

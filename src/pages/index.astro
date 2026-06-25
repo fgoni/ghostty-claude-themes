@@ -1,0 +1,647 @@
+---
+import themes from '../data/themes.json';
+import ThemeCard from '../components/ThemeCard.astro';
+import '../styles/global.css';
+
+// Bundled terminal fonts (latin subset only = one tiny @font-face each; the
+// woff2 is fetched lazily, only when a font is actually selected).
+import '@fontsource/jetbrains-mono/latin-400.css';
+import '@fontsource/jetbrains-mono/latin-700.css';
+import '@fontsource/jetbrains-mono/latin-400-italic.css';
+import '@fontsource/fira-code/latin-400.css';
+import '@fontsource/fira-code/latin-700.css';
+import '@fontsource/cascadia-code/latin-400.css';
+import '@fontsource/cascadia-code/latin-700.css';
+import '@fontsource/cascadia-code/latin-400-italic.css';
+import '@fontsource/source-code-pro/latin-400.css';
+import '@fontsource/source-code-pro/latin-700.css';
+import '@fontsource/source-code-pro/latin-400-italic.css';
+import '@fontsource/ibm-plex-mono/latin-400.css';
+import '@fontsource/ibm-plex-mono/latin-700.css';
+import '@fontsource/ibm-plex-mono/latin-400-italic.css';
+
+const tags = [...new Set(themes.flatMap((t) => t.tags))].sort();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ghostty × Claude Code — Theme Visualizer</title>
+    <meta
+      name="description"
+      content="See a real Claude Code session under every Ghostty terminal theme."
+    />
+  </head>
+  <body>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <header class="masthead">
+      <div class="brand">
+        <div>
+          <h1>GHOSTTY <span class="x">×</span> <span class="cc">CLAUDE CODE</span></h1>
+          <p class="byline">
+            by <a href="https://facundogoni.com.ar" target="_blank" rel="noopener noreferrer">facundogoni.com.ar</a>
+          </p>
+        </div>
+      </div>
+      <div class="head-toggles">
+        <button id="sort-toggle" class="fx-toggle" title="Sort by contrast score or default order" aria-pressed="false">
+          <span aria-hidden="true">↕</span> <span id="sort-label">Sort: default</span>
+        </button>
+        <button
+          id="cols-toggle"
+          class="fx-toggle icon-only"
+          title="Toggle 1 / 2 columns"
+          aria-label="Toggle 1 or 2 columns"
+        >
+          <span id="cols-ico" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="0"></rect><path d="M12 3v18"></path></svg></span>
+        </button>
+        <button id="import-btn" class="fx-toggle import" style="display: none">
+          <span class="plus">＋</span> Import your Ghostty
+        </button>
+      </div>
+    </header>
+
+    <section class="controls">
+      <div class="filters">
+        <input
+          id="search"
+          type="search"
+          placeholder="search themes…"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <div class="chips">
+          <button class="chip active" data-tag="all">all</button>
+          {
+            tags.map((t) => (
+              <button class="chip" data-tag={t}>
+                {t}
+              </button>
+            ))
+          }
+        </div>
+      </div>
+      <div class="font-picker">
+        <label for="font-select" class="font-label">Font</label>
+        <select id="font-select" class="font-select" title="Preview font for the session">
+          <option value="">Default (system mono)</option>
+          <optgroup label="Bundled — render for everyone">
+            <option value="'JetBrains Mono', var(--mono)">JetBrains Mono (Ghostty default)</option>
+            <option value="'Fira Code', var(--mono)">Fira Code</option>
+            <option value="'Cascadia Code', var(--mono)">Cascadia Code</option>
+            <option value="'Source Code Pro', var(--mono)">Source Code Pro</option>
+            <option value="'IBM Plex Mono', var(--mono)">IBM Plex Mono</option>
+          </optgroup>
+          <optgroup label="System — only if installed">
+            <option value="'SF Mono', 'SFMono-Regular', var(--mono)" data-check="SF Mono">SF Mono</option>
+            <option value="'Menlo', var(--mono)" data-check="Menlo">Menlo</option>
+            <option value="'Monaco', var(--mono)" data-check="Monaco">Monaco</option>
+            <option value="'Consolas', var(--mono)" data-check="Consolas">Consolas</option>
+          </optgroup>
+        </select>
+      </div>
+    </section>
+
+    <main class="gallery" data-active="realcast" data-cols="2">
+      {themes.map((theme) => <ThemeCard theme={theme} />)}
+      <p class="empty" hidden>No themes match that filter.</p>
+    </main>
+
+    <footer class="foot">
+      <p>
+        <strong>Assumes Claude Code is set to its <code>dark-ansi</code>
+        theme.</strong> That’s the mode where Claude emits <em>indexed</em> ANSI
+        colors and lets the terminal’s palette pick the real color — so a Ghostty
+        theme actually changes how Claude looks. In Claude’s default themes the
+        colors are hardcoded and do <em>not</em> follow your terminal (only the
+        background does). Set it with <code>/theme → dark-ansi</code>.
+      </p>
+      <p class="foot-dim">
+        The on-screen content is a real Claude Code session captured with
+        asciinema and replayed under each theme — the same bytes, re-colored by
+        each palette. Themes snapshotted from a local Ghostty install.
+      </p>
+    </footer>
+
+    <!-- Import dialog: paste or upload a Ghostty theme/config, all client-side. -->
+    <div class="modal" id="import-modal" hidden>
+      <div class="modal-backdrop" data-import-close></div>
+      <div class="modal-panel import-panel" role="dialog" aria-modal="true" aria-label="Import your Ghostty">
+        <div class="modal-head">
+          <span class="modal-title">Import your Ghostty</span>
+          <button class="modal-close" data-import-close aria-label="Close">esc ✕</button>
+        </div>
+        <div class="import-body">
+          <p class="import-hint">
+            Paste a Ghostty <strong>theme file</strong> or your
+            <code>~/.config/ghostty/config</code> (a <code>theme = Name</code>
+            line works too). Nothing leaves your browser. Tip:
+            <code>ghostty +show-config</code> prints your live config.
+          </p>
+          <textarea
+            id="import-text"
+            spellcheck="false"
+            placeholder="palette = 0=#1a1a1a&#10;palette = 1=#ff5555&#10;…&#10;background = #282a36&#10;foreground = #f8f8f2&#10;&#10;— or —&#10;&#10;theme = Dracula"
+          ></textarea>
+          <div class="import-actions">
+            <label class="file-btn">
+              choose file…
+              <input id="import-file" type="file" accept=".conf,.config,text/*,*" hidden />
+            </label>
+            <button id="import-load" class="load-btn">Load theme →</button>
+          </div>
+          <p id="import-msg" class="import-msg" hidden></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating scroll-to-top: shown briefly while scrolling up. Lucide arrow-up. -->
+    <button id="scroll-top" class="scroll-top" type="button" aria-label="Scroll to top" title="Scroll to top">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 7-7 7 7"></path><path d="M12 19V5"></path></svg>
+    </button>
+
+    <!-- Compare view: chosen theme fixed left, all others snap-scroll right. -->
+    <div class="compare" id="compare" hidden>
+      <div class="compare-head">
+        <span class="compare-title">Comparing <strong id="compare-name"></strong>
+          <span class="compare-hint">— scroll the right column; it snaps theme to theme</span>
+        </span>
+        <div class="compare-actions">
+          <button class="handoff-btn" id="compare-handoff" type="button">Handoff to Claude</button>
+          <button class="modal-close" id="compare-exit" type="button">exit ✕</button>
+        </div>
+      </div>
+      <div class="compare-cols">
+        <div class="compare-side compare-left" id="compare-left"></div>
+        <div class="compare-side compare-right" id="compare-right"></div>
+      </div>
+    </div>
+
+    <script>
+      import themes from '../data/themes.json';
+      import { themeVars } from '../lib/render.js';
+      import { parseGhostty } from '../lib/parseGhostty.js';
+      import realAnsi from '../../docs/reference-session.ansi?raw';
+      import realAnsiMobile from '../../docs/reference-session.mobile.ansi?raw';
+      import { ansiToHtml } from '../lib/ansiToHtml.js';
+      import { scoreTheme } from '../lib/legibility.js';
+
+      // The real Claude Code session as themed HTML (indexed ANSI -> spans
+      // colored by --c0..--c15). Two widths; the narrow one is used on phones.
+      const realHtmlWide = ansiToHtml(realAnsi);
+      const realHtmlNarrow = ansiToHtml(realAnsiMobile);
+      const mqMobile = window.matchMedia('(max-width: 768px)');
+      const themeByName = new Map(themes.map((t) => [t.name, t]));
+      // Themes whose name IS a real Ghostty theme name (so `theme = Name` works).
+      const namedSet = new Set(themes.map((t) => t.name));
+
+      // --- Handoff to Claude --------------------------------------------
+      // Build a ready-to-paste prompt that tells Claude Code to switch the
+      // user's Ghostty theme to this one, then copy it to the clipboard.
+      function paletteLines(theme) {
+        const lines = theme.palette.map((c, i) => `palette = ${i}=${c}`);
+        lines.push(`background = ${theme.background}`);
+        lines.push(`foreground = ${theme.foreground}`);
+        if (theme.cursor) {
+          lines.push(`cursor-color = ${theme.cursor}`);
+        }
+        return lines.join('\n');
+      }
+
+      function buildHandoffPrompt(theme) {
+        const named = namedSet.has(theme.name) || theme.ghosttyName;
+        const gname = theme.ghosttyName || theme.name;
+        const step2 = named
+          ? `Set this line (replacing any existing \`theme =\` line):\n\ntheme = ${gname}`
+          : `This isn't a named Ghostty theme, so set the raw palette:\n\n${paletteLines(theme)}`;
+        return [
+          `I'm using Claude Code in the Ghostty terminal. Please switch my Ghostty theme to "${gname}".`,
+          ``,
+          `1. Open my Ghostty config at ~/.config/ghostty/config (create it if it doesn't exist).`,
+          `2. ${step2}`,
+          `3. Save it. Ghostty reloads config with Cmd+Shift+, (or on restart).`,
+          `4. Make sure Claude Code is on its dark-ansi theme so the palette applies: run /theme and choose dark-ansi.`,
+        ].join('\n');
+      }
+
+      function copyText(text) {
+        if (navigator.clipboard?.writeText) {
+          return navigator.clipboard.writeText(text);
+        }
+        // Fallback for non-secure contexts.
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+          document.execCommand('copy');
+        } finally {
+          ta.remove();
+        }
+        return Promise.resolve();
+      }
+
+      // Copy the handoff prompt and flash the clicked button (no toast).
+      async function handoff(btn, theme) {
+        if (!theme) {
+          return;
+        }
+        await copyText(buildHandoffPrompt(theme));
+        const original = btn.textContent;
+        btn.classList.add('copied');
+        btn.textContent = 'Copied ✓';
+        clearTimeout(btn._copyTimer);
+        btn._copyTimer = setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.textContent = original;
+        }, 1600);
+      }
+
+      function fillRealHtml() {
+        const narrow = mqMobile.matches;
+        const html = narrow ? realHtmlNarrow : realHtmlWide;
+        const tag = narrow ? 'm' : 'd';
+        document.querySelectorAll('.real-html').forEach((el) => {
+          if (el.dataset.filled !== tag) {
+            el.innerHTML = html;
+            el.dataset.filled = tag;
+          }
+        });
+      }
+      fillRealHtml();
+      mqMobile.addEventListener('change', fillRealHtml);
+
+      const gallery = document.querySelector('.gallery');
+
+      // --- Search + tag filters -----------------------------------------
+      const search = document.getElementById('search');
+      const cards = [...document.querySelectorAll('.theme-card')];
+      const empty = document.querySelector('.empty');
+      let activeTag = 'all';
+
+      function applyFilters() {
+        const q = search.value.trim().toLowerCase();
+        let shown = 0;
+        cards.forEach((card) => {
+          const name = card.dataset.name.toLowerCase();
+          const tags = card.dataset.tags;
+          const matchQ = !q || name.includes(q);
+          const matchTag = activeTag === 'all' || tags.split(' ').includes(activeTag);
+          const show = matchQ && matchTag;
+          card.hidden = !show;
+          if (show) shown++;
+        });
+        empty.hidden = shown !== 0;
+      }
+      search.addEventListener('input', applyFilters);
+      document.querySelectorAll('.chip').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          document.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+          chip.classList.add('active');
+          activeTag = chip.dataset.tag;
+          applyFilters();
+        });
+      });
+
+      // --- Columns toggle (1 / 2) ---------------------------------------
+      // Lucide icons (inlined SVG, no dependency): columns-2 and square.
+      const SVG_HEAD =
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
+      const ICON_COLUMNS2 = `${SVG_HEAD}<rect width="18" height="18" x="3" y="3" rx="0"></rect><path d="M12 3v18"></path></svg>`;
+      const ICON_SQUARE = `${SVG_HEAD}<rect width="18" height="18" x="3" y="3" rx="0"></rect></svg>`;
+
+      const colsToggle = document.getElementById('cols-toggle');
+      const colsIco = document.getElementById('cols-ico');
+      colsToggle.addEventListener('click', () => {
+        const one = gallery.getAttribute('data-cols') !== '1';
+        gallery.setAttribute('data-cols', one ? '1' : '2');
+        colsIco.innerHTML = one ? ICON_SQUARE : ICON_COLUMNS2;
+      });
+
+      // --- Sort: default order vs. contrast score (desc) -----------------
+      const sortToggle = document.getElementById('sort-toggle');
+      const sortLabel = document.getElementById('sort-label');
+      const originalOrder = [...document.querySelectorAll('.theme-card')];
+      let sortByContrast = false;
+
+      function applySort() {
+        const all = [...gallery.querySelectorAll('.theme-card')];
+        let ordered;
+        if (sortByContrast) {
+          ordered = all
+            .slice()
+            .sort((a, b) => Number(b.dataset.score) - Number(a.dataset.score));
+        } else {
+          // Default: any imported (featured) card first, then build order.
+          const featured = all.filter((c) => c.classList.contains('featured'));
+          const orig = originalOrder.filter((c) => all.includes(c));
+          ordered = [...featured, ...orig];
+        }
+        ordered.forEach((c) => gallery.insertBefore(c, empty));
+      }
+      sortToggle.addEventListener('click', () => {
+        sortByContrast = !sortByContrast;
+        sortToggle.setAttribute('aria-pressed', String(sortByContrast));
+        sortLabel.textContent = sortByContrast ? 'Sort: contrast' : 'Sort: default';
+        applySort();
+      });
+
+      // --- Font picker ---------------------------------------------------
+      // Sets --session-font on :root so every .real-html (gallery + compare)
+      // re-renders in the chosen terminal font. Persisted in localStorage.
+      const fontSelect = document.getElementById('font-select');
+      const FONT_KEY = 'cc-themes-font';
+      function applyFont(value) {
+        if (value) {
+          document.documentElement.style.setProperty('--session-font', value);
+        } else {
+          document.documentElement.style.removeProperty('--session-font');
+        }
+      }
+      const savedFont = localStorage.getItem(FONT_KEY);
+      if (savedFont !== null) {
+        fontSelect.value = savedFont;
+        applyFont(savedFont);
+      }
+      fontSelect.addEventListener('change', () => {
+        applyFont(fontSelect.value);
+        localStorage.setItem(FONT_KEY, fontSelect.value);
+      });
+      // Best-effort: flag system fonts the visitor doesn't have installed.
+      document.fonts.ready.then(() => {
+        fontSelect.querySelectorAll('option[data-check]').forEach((opt) => {
+          try {
+            if (!document.fonts.check(`16px "${opt.dataset.check}"`)) {
+              opt.textContent += ' — not installed';
+            }
+          } catch (e) {
+            /* check unsupported; leave the label as-is */
+          }
+        });
+      });
+
+      // Each card has two actions: Handoff (copy the theme-switch prompt) and
+      // Compare (the detail modal was removed).
+      function wireCard(card) {
+        const cmp = card.querySelector('.compare-btn');
+        if (cmp) {
+          cmp.addEventListener('click', () => openCompare(card.dataset.name));
+        }
+        const ho = card.querySelector('.handoff-btn');
+        if (ho) {
+          ho.addEventListener('click', () => handoff(ho, themeByName.get(card.dataset.name)));
+        }
+      }
+      cards.forEach(wireCard);
+
+      // --- Compare view --------------------------------------------------
+      // Chosen theme fixed in the left column; all others snap-scroll on the
+      // right. Independent scroll containers (not sticky) per the design.
+      const compare = document.getElementById('compare');
+      const compareLeft = document.getElementById('compare-left');
+      const compareRight = document.getElementById('compare-right');
+      const compareName = document.getElementById('compare-name');
+      const compareHandoff = document.getElementById('compare-handoff');
+      let galleryScrollY = 0;
+      let currentCompareName = '';
+
+      function compareCard(theme, snap) {
+        const html = mqMobile.matches ? realHtmlNarrow : realHtmlWide;
+        const el = document.createElement('div');
+        el.className = snap ? 'cmp-card snap' : 'cmp-card';
+        el.innerHTML = `
+          <div class="terminal" style="${themeVars(theme)}">
+            <div class="titlebar">
+              <span class="lights"><i class="l-red"></i><i class="l-yellow"></i><i class="l-green"></i></span>
+              <span class="tab-title">${theme.name}</span>
+            </div>
+            <div class="real-html" data-filled="${mqMobile.matches ? 'm' : 'd'}">${html}</div>
+          </div>`;
+        return el;
+      }
+
+      function openCompare(name) {
+        const theme = themeByName.get(name);
+        if (!theme) {
+          return;
+        }
+        compareName.textContent = name;
+        currentCompareName = name;
+        compareLeft.replaceChildren(compareCard(theme, false));
+        const frag = document.createDocumentFragment();
+        themes.forEach((t) => {
+          if (t.name !== name) {
+            frag.appendChild(compareCard(t, true));
+          }
+        });
+        compareRight.replaceChildren(frag);
+        compareRight.scrollTop = 0;
+        compareLeft.scrollTop = 0;
+        galleryScrollY = window.scrollY;
+        compare.hidden = false;
+        document.body.classList.add('no-scroll');
+      }
+      function closeCompare() {
+        compare.hidden = true;
+        document.body.classList.remove('no-scroll');
+        compareLeft.replaceChildren();
+        compareRight.replaceChildren();
+        window.scrollTo(0, galleryScrollY); // restore gallery position
+      }
+      document.getElementById('compare-exit').addEventListener('click', closeCompare);
+      compareHandoff.addEventListener('click', () =>
+        handoff(compareHandoff, themeByName.get(currentCompareName)),
+      );
+
+      // --- Import your Ghostty ------------------------------------------
+      const importModal = document.getElementById('import-modal');
+      const importBtn = document.getElementById('import-btn');
+      const importText = document.getElementById('import-text');
+      const importFile = document.getElementById('import-file');
+      const importLoad = document.getElementById('import-load');
+      const importMsg = document.getElementById('import-msg');
+      let allThemes = null;
+
+      function openImport() {
+        importModal.hidden = false;
+        document.body.classList.add('no-scroll');
+        importText.focus();
+      }
+      function closeImport() {
+        importModal.hidden = true;
+        document.body.classList.remove('no-scroll');
+      }
+      function showMsg(text, kind) {
+        importMsg.textContent = text;
+        importMsg.className = `import-msg ${kind || ''}`;
+        importMsg.hidden = false;
+      }
+      importBtn.addEventListener('click', openImport);
+      importModal.querySelectorAll('[data-import-close]').forEach((el) =>
+        el.addEventListener('click', closeImport),
+      );
+      importFile.addEventListener('change', async () => {
+        const file = importFile.files?.[0];
+        if (file) {
+          importText.value = await file.text();
+        }
+      });
+
+      // Build the contrast badge markup for a freshly scored theme.
+      function legibTitle(lg) {
+        return (
+          `Contrast ${lg.score}/100 (${lg.grade}) — ` +
+          `body ${lg.sub.body} · dim ${lg.sub.dim} · accents ${lg.sub.accents} · prompt ${lg.sub.prompt}` +
+          (lg.lowContrast ? ' · ⚠ low body/prompt contrast' : '')
+        );
+      }
+      function legibBadge(lg) {
+        return `<span class="legib-badge grade-${lg.grade}${lg.lowContrast ? ' low' : ''}" title="${legibTitle(lg)}">
+            <span class="lg-grade">${lg.grade}</span>${lg.score}${lg.lowContrast ? ' ⚠' : ''}
+          </span>`;
+      }
+      function legibBreakdown(lg) {
+        const subClass = (v) => (v >= 70 ? 'good' : v >= 40 ? 'ok' : 'bad');
+        const items = [
+          ['Body', lg.sub.body],
+          ['Dim', lg.sub.dim],
+          ['Accents', lg.sub.accents],
+          ['Prompt', lg.sub.prompt],
+        ];
+        const cells = items
+          .map(
+            ([label, v]) => `<div class="lb-item">
+              <div class="lb-head"><span>${label}</span><span class="lb-val">${v}</span></div>
+              <div class="lb-track"><div class="lb-fill ${subClass(v)}" style="width:${v}%"></div></div>
+            </div>`,
+          )
+          .join('');
+        return `<div class="legib-breakdown">${cells}</div>`;
+      }
+      // Badge + breakdown together, on their own row above the buttons.
+      function legibRow(lg) {
+        return `<div class="legib-row" title="${legibTitle(lg)}">${legibBadge(lg)}${legibBreakdown(lg)}</div>`;
+      }
+
+      function buildCard(theme) {
+        const html = mqMobile.matches ? realHtmlNarrow : realHtmlWide;
+        const lg = scoreTheme(theme);
+        const swatch = theme.palette
+          .slice(8, 16)
+          .map((c) => `<i style="background:${c}"></i>`)
+          .join('');
+        const card = document.createElement('div');
+        card.className = 'theme-card featured';
+        card.dataset.name = theme.name;
+        card.dataset.tags = 'yours';
+        card.dataset.score = lg.score;
+        card.innerHTML = `
+          <div class="terminal" style="${themeVars(theme)}">
+            <div class="titlebar">
+              <span class="lights"><i class="l-red"></i><i class="l-yellow"></i><i class="l-green"></i></span>
+              <span class="tab-title">${theme.name}</span>
+            </div>
+            <div class="real-html" data-filled="${mqMobile.matches ? 'm' : 'd'}">${html}</div>
+          </div>
+          ${legibRow(lg)}
+          <div class="card-foot">
+            <span class="theme-name">★ ${theme.name}</span>
+            <button class="compare-btn" type="button">Compare this theme</button>
+            <button class="handoff-btn" type="button">Handoff to Claude</button>
+            <span class="swatch">${swatch}</span>
+          </div>`;
+        return card;
+      }
+
+      let yourCard = null;
+      function applyImportedTheme(theme) {
+        themeByName.set(theme.name, theme);
+        if (yourCard) {
+          yourCard.remove();
+        }
+        yourCard = buildCard(theme);
+        wireCard(yourCard);
+        gallery.insertBefore(yourCard, gallery.firstElementChild);
+        applySort(); // place it by score if contrast-sorting is on
+        closeImport();
+        yourCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      importLoad.addEventListener('click', async () => {
+        const text = importText.value.trim();
+        if (!text) {
+          showMsg('Paste a theme/config or choose a file first.', 'err');
+          return;
+        }
+        const parsed = parseGhostty(text);
+        let theme = parsed.colors;
+        if (!theme && parsed.themeRef) {
+          if (!allThemes) {
+            showMsg('Resolving theme name…', '');
+            allThemes = (await import('../data/themes-all.json')).default;
+          }
+          const hit = allThemes[parsed.themeRef.toLowerCase()];
+          if (hit) {
+            theme = { ...hit, name: `Your Ghostty (${hit.name})`, ghosttyName: hit.name };
+          } else {
+            showMsg(
+              `Couldn't find a Ghostty theme named "${parsed.themeRef}". Paste the theme file's colors instead.`,
+              'err',
+            );
+            return;
+          }
+        }
+        if (!theme) {
+          showMsg(parsed.warnings[0] || 'Could not parse a theme.', 'err');
+          return;
+        }
+        applyImportedTheme(theme);
+      });
+
+      // --- Floating scroll-to-top ---------------------------------------
+      // Appears only while scrolling UP (past a small threshold), then fades
+      // out 1500ms after the last upward scroll.
+      const scrollTop = document.getElementById('scroll-top');
+      let lastScrollY = window.scrollY;
+      let scrollTopTimer;
+      window.addEventListener(
+        'scroll',
+        () => {
+          const y = window.scrollY;
+          const goingUp = y < lastScrollY;
+          lastScrollY = y;
+          if (goingUp && y > 300) {
+            scrollTop.classList.add('show');
+            clearTimeout(scrollTopTimer);
+            scrollTopTimer = setTimeout(() => scrollTop.classList.remove('show'), 1500);
+          } else if (!goingUp) {
+            scrollTop.classList.remove('show');
+            clearTimeout(scrollTopTimer);
+          }
+        },
+        { passive: true },
+      );
+      scrollTop.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        scrollTop.classList.remove('show');
+        clearTimeout(scrollTopTimer);
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') {
+          return;
+        }
+        if (!importModal.hidden) {
+          closeImport();
+        } else if (!compare.hidden) {
+          closeCompare();
+        }
+      });
+    </script>
+  </body>
+</html>
