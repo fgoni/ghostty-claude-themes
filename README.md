@@ -14,7 +14,7 @@ by a different Ghostty theme. Pick the one you like before you set it.
 
 ## Try it
 
-- **Online:** _(deployed to Cloudflare Workers — URL coming)_
+- **Online:** <https://cc-themes-for-ghostty.facundogoni.com.ar>
 - **Local:**
   ```bash
   git clone <repo>

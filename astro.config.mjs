@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 
 // Static site. No runtime, no framework — just Astro components + vanilla JS.
 export default defineConfig({
-  site: 'http://localhost:4321',
+  site: 'https://cc-themes-for-ghostty.facundogoni.com.ar',
   build: { format: 'file' },
   vite: {
     // ghostty-web is lazy-imported on demand; pre-bundling it deterministically

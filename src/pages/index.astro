@@ -21,6 +21,16 @@ import '@fontsource/ibm-plex-mono/latin-700.css';
 import '@fontsource/ibm-plex-mono/latin-400-italic.css';
 
 const tags = [...new Set(themes.flatMap((t) => t.tags))].sort();
+
+// Social / SEO metadata. Absolute URLs are required by Open Graph & Twitter —
+// derive them from `site` in astro.config.mjs (falls back gracefully in dev).
+const SITE = Astro.site ?? new URL('https://cc-themes-for-ghostty.facundogoni.com.ar');
+const title = 'Ghostty × Claude Code — Theme Visualizer';
+const description =
+  "See a real Claude Code session rendered under every Ghostty terminal theme — by Ghostty's real VT engine, not a CSS fake. Pick the one that reads best before you set it.";
+const canonical = new URL(Astro.url.pathname, SITE).href;
+const ogImage = new URL('og-image.png', SITE).href;
+const ogImageAlt = 'GHOSTTY × CLAUDE CODE — Theme Visualizer, with a mock Claude Code terminal session.';
 ---
 
 <!doctype html>
@@ -28,10 +38,54 @@ const tags = [...new Set(themes.flatMap((t) => t.tags))].sort();
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Ghostty × Claude Code — Theme Visualizer</title>
-    <meta
-      name="description"
-      content="See a real Claude Code session under every Ghostty terminal theme."
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#07080d" />
+
+    <!-- Favicon (inline SVG ghost glyph, no extra request) -->
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%2307080d'/%3E%3Ctext x='50' y='50' font-size='62' text-anchor='middle' dominant-baseline='central'%3E%F0%9F%91%BB%3C/text%3E%3C/svg%3E"
+    />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Ghostty × Claude Code" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content={ogImageAlt} />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={ogImageAlt} />
+
+    <!-- Structured data -->
+    <script
+      type="application/ld+json"
+      is:inline
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: title,
+        description,
+        url: canonical,
+        image: ogImage,
+        applicationCategory: 'DeveloperApplication',
+        operatingSystem: 'Any',
+        browserRequirements: 'Requires JavaScript and WebAssembly',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        author: { '@type': 'Person', name: 'Facundo Goñi', url: 'https://facundogoni.com.ar' },
+      })}
     />
   </head>
   <body>
