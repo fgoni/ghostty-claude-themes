@@ -1,0 +1,159 @@
+[0m[37;100m❯ [0m[97;100m/claude-showcase[0m
+[0m
+[0m[97m⏺[0m I'll run the Claude Code feature showcase demo. Everything below is in English, as required for the reference capture.[0m
+[0m
+[0m  ✻ Thinking…[0m
+[0m
+[0m  ▎ [0m[3mThis capture should surface every distinct piece of Claude Code's UI exactly once, in a natural order. I'll build a[0m
+[0m[3mtiny theme-preview module inside a throwaway [0m[94;3mdemo-sandbox/[0m[3m, deliberately seed one runnable bug[0m
+[0m  ▎ [0m[3mso a later [0m[94;3mnode[0m[3m run fails (red error block), then fix it so it succeeds — that error→fix→success arc is the most[0m
+[0m[3mimportant visual beat. Along the way I'll touch Bash, Write, Read, Edit (with a real red/green[0m
+[0m  ▎ [0m[3mdiff), Grep, and a subagent, then clean everything up. Nothing leaves the sandbox.[0m
+[0m
+[0m  Here's the plan for this demo:[0m
+[0m
+[0m  ⏺ [0m[1mDemo plan[0m
+[0m  1. Scaffold [0m[94mdemo-sandbox/[0m and write a small [0m[94mtheme-preview.js[0m (with one seeded bug)[0m
+[0m  2. Read it back, then edit it (color tweaks + new field) to show a real diff[0m
+[0m  3. Grep for the new symbol, run it to hit the error, fix it, run again to succeed[0m
+[0m  4. Map the sandbox with a subagent, recap, and clean up[0m
+[0m
+[0m  Let me set up the todos to track these phases.[0m
+[0m
+[0m[92m⏺[0m [0m[1mBash[0m(mkdir -p /Users/facundo/Sites/ghostty-claude-themes/demo-sandbox && git status -s)[0m
+[0m[37m  ⎿  [0m?? .claude/[0m
+[0m     ?? .gitignore[0m
+[0m     ?? README.md[0m
+[0m     … +9 lines (ctrl+o to expand)[0m
+[0m[37m  ⎿  Allowed by auto mode classifier[0m
+[0m
+[0m[97m⏺[0m Sandbox created. Now I'll register the todos for this demo.[0m
+[0m
+[0m[97m⏺[0m This harness uses TaskCreate for the todo list. I'll create the four phases.[0m
+[0m
+[0m[97m⏺[0m Starting phase 1 — writing the module.[0m
+[0m
+[0m[92m⏺[0m [0m[1mWrite[0m(demo-sandbox/theme-preview.js)[0m
+[0m[37m  ⎿  [0mWrote [0m[1m37[0m lines to [0m[1mdemo-sandbox/theme-preview.js[0m
+[0m     [0m[37m  1 [0m[90m// theme-preview.js — tiny Ghostty/Claude Code palette previewer.[0m
+[0m     [0m[37m  2 [0m[90m// Turns a palette object into the ANSI escape sequences a terminal[0m
+[0m     [0m[37m  3 [0m[90m// would use to render Claude Code's UI in that theme.[0m
+[0m     [0m[37m  4[0m
+[0m     [0m[37m  5 [0m[96mconst[0m[37m ESC = [0m[92m"\x1b["[0m[37m;[0m
+[0m     [0m[37m  6[0m
+[0m     [0m[37m  7 [0m[90m/** Build a 24-bit foreground escape for a #rrggbb hex color. */[0m
+[0m     [0m[37m  8 [0m[96mfunction[0m[37m [0m[93mfg[0m[37m(hex) {[0m
+[0m     [0m[37m  9   [0m[96mconst[0m[37m [r, g, b] = hex[0m
+[0m     [0m[37m 10     .replace([0m[92m"#"[0m[37m, [0m[92m""[0m[37m)[0m
+[0m     [0m[37m… +27[0m [0m[37mlines (ctrl+o to expand)[0m
+[0m
+[0m[97m⏺[0m Now reading it back, then editing it for a real diff.[0m
+[0m
+[0m  [0m[37mRead [0m[37;1m1[0m[37m file (ctrl+o to expand)[0m
+[0m
+[0m[97m⏺[0m Now editing — tweaking two color values and adding a [0m[94mselectionBackground[0m field (red removals + green additions).[0m
+[0m
+[0m[92m⏺[0m [0m[1mUpdate[0m(demo-sandbox/theme-preview.js)[0m
+[0m[37m  ⎿  [0mAdded [0m[1m3[0m lines, removed [0m[1m2[0m lines[0m
+[0m     [0m[37m 25  }[0m
+[0m     [0m[37m 26[0m
+[0m     [0m[37m 27  [0m[96mconst[0m[37m ghostty = {[0m
+[0m     [0m[91m 28 -[0m[37m  foreground: "#d8dee9",[0m
+[0m     [0m[91m 29 -[0m[37m  accent: "#88c0d0",[0m
+[0m     [0m[92m 28 +[0m[37m  foreground: [0m[92m"#eceff4"[0m[37m,[0m
+[0m     [0m[92m 29 +[0m[37m  accent: [0m[92m"#81a1c1"[0m[37m,[0m
+[0m     [0m[37m 30    success: [0m[92m"#a3be8c"[0m[37m,[0m
+[0m     [0m[37m 31    error: [0m[92m"#bf616a"[0m[37m,[0m
+[0m     [0m[92m 32 +[0m[37m  selectionBackground: [0m[92m"#434c5e"[0m[37m,[0m
+[0m     [0m[37m 33  };[0m
+[0m     [0m[37m 34[0m
+[0m     [0m[37m 35 [0m [0m[90m// Bug seeded on purpose: `palettes` is undefined (should be `ghostty`).[0m
+[0m
+[0m[97m⏺[0m Searching for the field I just added.[0m
+[0m
+[0m[97m⏺[0m Grep isn't available as a dedicated tool here, so I'll search via Bash.[0m
+[0m
+[0m  [0m[37mSearched for [0m[37;1m1[0m[37m pattern (ctrl+o to expand)[0m
+[0m
+[0m[97m⏺[0m Now running it — this will hit the seeded bug.[0m
+[0m
+[0m[91m⏺[0m [0m[1mBash[0m(node /Users/facundo/Sites/ghostty-claude-themes/demo-sandbox/theme-preview.js)[0m
+[0m[37m  ⎿  [0m[91mError: Exit code 1[0m
+[0m     [0m[91mfile:///Users/facundo/Sites/ghostty-claude-themes/demo-sandbox/theme-preview.js:36[0m
+[0m     [0m[91mconsole.log(applyTheme(palettes));[0m
+[0m     [0m[91m                       ^[0m
+[0m
+[0m     [0m[91mReferenceError: palettes is not defined[0m
+[0m     [0m[91m    at file:///Users/facundo/Sites/ghostty-claude-themes/demo-sandbox/theme-preview.js:36:24[0m
+[0m     [0m[91m    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)[0m
+[0m     [0m[91m    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:647:26)[0m
+[0m  u  [0m[91m    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)[0m
+[0m     [0m[37m… +2 lines (ctrl+o to expand)[0m
+[0m
+[0m[97m⏺[0m There's the error state. Fixing the typo now.[0m
+[0m
+[0m[92m⏺[0m [0m[1mUpdate[0m(demo-sandbox/theme-preview.js)[0m
+[0m[37m  ⎿  [0mAdded [0m[1m1[0m line, removed [0m[1m2[0m lines[0m
+[0m     [0m[37m 32    selectionBackground: [0m[92m"#434c5e"[0m[37m,[0m
+[0m     [0m[37m 33  };[0m
+[0m     [0m[37m 34[0m
+[0m     [0m[91m 35 -[0m[37m// Bug seeded on purpose: `palettes` is undefined (should be `ghostty`).[0m
+[0m     [0m[91m 36 -[0m[37mconsole.log(applyTheme(palettes));[0m
+[0m     [0m[92m 35 +[0m[96mconsole[0m[37m.log(applyTheme(ghostty));[0m
+[0m     [0m[37m 36[0m
+[0m     [0m[37m 37  [0m[96mmodule[0m[37m.exports = { applyTheme, fg };[0m
+[0m
+[0m[91m⏺[0m [0m[1mBash[0m(node /Users/facundo/Sites/ghostty-claude-themes/demo-sandbox/theme-preview.js)[0m
+[0m[37m  ⎿  [0m[91mError: Exit code 1[0m
+[0m     [0m[91mfile:///Users/facundo/Sites/ghostty-claude-themes/demo-sandbox/theme-preview.js:37[0m
+[0m     [0m[91mmodule.exports = { applyTheme, fg };[0m
+[0m     [0m[91m^[0m
+[0m
+[0m     [0m[91mReferenceError: module is not defined in ES module scope[0m
+[0m     [0m[91mThis file is being treated as an ES module because it has a '.js' file extension and[0m
+[0m[91m'/Users/facundo/Sites/ghostty-claude-themes/package.json' contains "type": "module". To treat it as a CommonJS script,[0m
+[0m[91mrename[0m
+[0m     [0m[91mit to use the '.cjs' file extension.[0m
+[0m     [0m[91m    at file:///Users/facundo/Sites/ghostty-claude-themes/demo-sandbox/theme-preview.js:37:1[0m
+[0m     [0m[91m    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)[0m
+[0m     [0m[37m… +4 lines (ctrl+o to expand)[0m
+[0m
+[0m[97m⏺[0m The palette line printed correctly, but the repo's [0m[94mpackage.json[0m uses [0m[94m"type": "module"[0m, so the CommonJS [0m[94mmodule.exports[0m
+[0mline fails. Converting it to an ESM export.[0m
+[0m
+[0m[92m⏺[0m [0m[1mUpdate[0m(demo-sandbox/theme-preview.js)[0m
+[0m[37m  ⎿  [0mAdded [0m[1m1[0m line, removed [0m[1m1[0m line[0m
+[0m     [0m[37m 34[0m
+[0m     [0m[37m 35  [0m[96mconsole[0m[37m.log(applyTheme(ghostty));[0m
+[0m     [0m[37m 36[0m
+[0m     [0m[91m 37 -[0m[37mmodule.exports = { applyTheme, fg };[0m
+[0m     [0m[92m 37 +[0m[95mexport[0m[37m { applyTheme, fg };[0m
+[0m
+[0m[92m⏺[0m [0m[1mBash[0m(node /Users/facundo/Sites/ghostty-claude-themes/demo-sandbox/theme-preview.js && echo "✓ exit 0")[0m
+[0m     ✓ exit 0[0m
+[0m[37m  ⎿  Allowed by auto mode classifier[0m
+[0m
+[0m[97m⏺[0m It runs cleanly now (exit 0). Marking phase 3 done and moving to the subagent map.[0m
+[0m
+[0m[97m⏺[0m Launching a small Explore subagent to map the sandbox.[0m
+[0m
+[0m[92m⏺[0m [0m[1mExplore[0m(Map the demo-sandbox) [0m[37mSonnet 4.6[0m
+[0m[37m  ⎿  [0mDone (3 tool uses · 12.5k tokens · 11s)[0m
+[0m[37m  (ctrl+o to expand)[0m
+[0m[37m  ⎿  Allowed by auto mode classifier[0m
+[0m
+[0m[97m⏺[0m Subagent confirms a single-file sandbox. Cleaning up now.[0m
+[0m
+[0m[92m⏺[0m [0m[1mBash[0m(rm -rf /Users/facundo/Sites/ghostty-claude-themes/demo-sandbox && test ! -d[0m
+[0m/Users/facundo/Sites/ghostty-claude-themes/demo-sandbox && echo "✓ demo-sandbox remo…)[0m
+[0m[37m  ⎿  [0m✓ demo-sandbox removed[0m
+[0m
+[0m[97m⏺[0m Done. Here's what changed:[0m
+[0m
+[0m  - ✓ Wrote [0m[94mdemo-sandbox/theme-preview.js[0m — an [0m[94mapplyTheme(palette)[0m previewer turning a Ghostty palette into ANSI escapes[0m
+[0m  - ✓ Edited the palette: tweaked [0m[94mforeground[0m/[0m[94maccent[0m and added a [0m[94mselectionBackground[0m field (real red/green diff)[0m
+[0m  - ✓ Exercised the error→fix→success arc: undefined [0m[94mpalettes[0m typo → fixed → CJS/ESM mismatch → fixed → clean exit 0[0m
+[0m  - ✓ Mapped the sandbox with an [0m[94mExplore[0m subagent (single 37-line file)[0m
+[0m  - ✓ Removed [0m[94mdemo-sandbox/[0m — no real project files touched[0m
+[0m  - ⚠ This harness exposes [0m[94mTaskCreate[0m/[0m[94mTaskUpdate[0m and Bash [0m[94mgrep[0m rather than [0m[94mTodoWrite[0m/a dedicated [0m[94mGrep[0m tool, so those[0m
+[0mphases used the available equivalents — the rendered UI elements are the same.[0m
