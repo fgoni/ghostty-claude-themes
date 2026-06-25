@@ -1,0 +1,26 @@
+{
+  "name": "ghostty-claude-themes",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Visualize Ghostty terminal themes applied to Claude Code's UI",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "extract": "node scripts/extract-themes.mjs",
+    "deploy": "astro build && wrangler deploy",
+    "cf:preview": "astro build && wrangler dev"
+  },
+  "dependencies": {
+    "@fontsource/cascadia-code": "^5.2.3",
+    "@fontsource/fira-code": "^5.2.7",
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource/jetbrains-mono": "^5.2.8",
+    "@fontsource/source-code-pro": "^5.2.7",
+    "astro": "^4.16.18"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
