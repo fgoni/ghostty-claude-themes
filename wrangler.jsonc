@@ -1,0 +1,19 @@
+{
+  // Cloudflare Workers — static assets only (no server code). `wrangler deploy`
+  // uploads the built Astro site in ./dist and serves it from the edge at the
+  // custom domain below.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cc-themes-for-ghostty",
+  "account_id": "a2bb03992bcaf931e19199e7d4b45f68",
+  "compatibility_date": "2026-06-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [
+    {
+      "pattern": "cc-themes-for-ghostty.facundogoni.com.ar",
+      "custom_domain": true
+    }
+  ]
+}
