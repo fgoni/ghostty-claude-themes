@@ -27,7 +27,7 @@ const tags = [...new Set(themes.flatMap((t) => t.tags))].sort();
 const SITE = Astro.site ?? new URL('https://cc-themes-for-ghostty.facundogoni.com.ar');
 const title = 'Ghostty × Claude Code — Theme Visualizer';
 const description =
-  "See a real Claude Code session rendered under every Ghostty terminal theme — by Ghostty's real VT engine, not a CSS fake. Pick the one that reads best before you set it.";
+  'See a real Claude Code session rendered under every Ghostty terminal theme. Pick the one that reads best before you set it.';
 const canonical = new URL(Astro.url.pathname, SITE).href;
 const ogImage = new URL('og-image.png', SITE).href;
 const ogImageAlt = 'GHOSTTY × CLAUDE CODE — Theme Visualizer, with a mock Claude Code terminal session.';

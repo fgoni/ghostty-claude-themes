@@ -26,7 +26,7 @@
   <text x="80" y="150" font-family="JetBrains Mono, monospace" font-weight="800" font-size="74" letter-spacing="-1" fill="#c7d0e0">GHOSTTY <tspan fill="#2de2e6">×</tspan> <tspan fill="#d97757">CLAUDE CODE</tspan></text>
 
   <!-- Subtitle -->
-  <text x="82" y="206" font-family="JetBrains Mono, monospace" font-weight="500" font-size="29" fill="#6b7490">Theme Visualizer — preview every Ghostty terminal theme</text>
+  <text x="82" y="206" font-family="JetBrains Mono, monospace" font-weight="500" font-size="29" fill="#aab4cc">Theme Visualizer — preview every Ghostty terminal theme</text>
 
   <!-- Terminal window -->
   <g>
@@ -37,20 +37,20 @@
     <circle cx="108" cy="284" r="6.5" fill="#ff5f57"/>
     <circle cx="132" cy="284" r="6.5" fill="#febc2e"/>
     <circle cx="156" cy="284" r="6.5" fill="#28c840"/>
-    <text x="600" y="289" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="17" fill="#6b7490">claude — dark-ansi</text>
+    <text x="600" y="289" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="17" fill="#8f99b4">claude — dark-ansi</text>
 
     <!-- terminal content -->
     <text font-family="JetBrains Mono, monospace" font-size="22" xml:space="preserve">
       <tspan x="112" y="350" fill="#2de2e6">❯</tspan><tspan fill="#c7d0e0"> claude</tspan>
       <tspan x="112" y="392" fill="#d97757">✻ Welcome to Claude Code</tspan>
-      <tspan x="112" y="430" fill="#6b7490">  Pick the theme that reads best for you.</tspan>
+      <tspan x="112" y="430" fill="#9aa4be">  Pick the theme that reads best for you.</tspan>
       <tspan x="112" y="476" fill="#b14aed">●</tspan><tspan fill="#c7d0e0"> Building the perfect terminal palette…</tspan>
-      <tspan x="112" y="514" fill="#28c840">✔</tspan><tspan fill="#6b7490"> rendered by Ghostty's real VT engine (wasm)</tspan>
+      <tspan x="112" y="514" fill="#28c840">✔</tspan><tspan fill="#9aa4be"> same session, recolored by each Ghostty palette</tspan>
     </text>
   </g>
 
   <!-- byline -->
-  <text x="1120" y="598" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="20" fill="#6b7490">by <tspan fill="#2de2e6">facundogoni.com.ar</tspan></text>
+  <text x="1120" y="598" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="20" fill="#8f99b4">by <tspan fill="#2de2e6">facundogoni.com.ar</tspan></text>
 
   <!-- scanlines -->
   <rect width="1200" height="630" fill="url(#scan)"/>
