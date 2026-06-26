@@ -1,0 +1,18 @@
+{
+  // Standalone redirect Worker. Owns the retired subdomain
+  // cc-themes-for-ghostty.facundogoni.com.ar and 301s everything to the new
+  // sub-path on the apex (see ../wrangler.jsonc for the actual site). Kept in a
+  // sibling folder so the main project stays a pure static-assets deploy.
+  // Deploy with: wrangler deploy -c redirect/wrangler.jsonc
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "cc-themes-ghostty-redirect",
+  "account_id": "a2bb03992bcaf931e19199e7d4b45f68",
+  "main": "src/redirect.js",
+  "compatibility_date": "2026-06-01",
+  "routes": [
+    {
+      "pattern": "cc-themes-for-ghostty.facundogoni.com.ar",
+      "custom_domain": true
+    }
+  ]
+}
