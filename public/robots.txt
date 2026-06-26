@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://cc-themes-for-ghostty.facundogoni.com.ar/sitemap.xml
+Sitemap: https://www.facundogoni.com.ar/ghostty-themes/sitemap.xml

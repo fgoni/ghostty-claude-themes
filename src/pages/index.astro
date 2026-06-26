@@ -24,12 +24,17 @@ const tags = [...new Set(themes.flatMap((t) => t.tags))].sort();
 
 // Social / SEO metadata. Absolute URLs are required by Open Graph & Twitter —
 // derive them from `site` in astro.config.mjs (falls back gracefully in dev).
-const SITE = Astro.site ?? new URL('https://cc-themes-for-ghostty.facundogoni.com.ar');
+const SITE = Astro.site ?? new URL('https://www.facundogoni.com.ar');
 const title = 'Ghostty × Claude Code — Theme Visualizer';
 const description =
   'See a real Claude Code session rendered under every Ghostty terminal theme. Pick the one that reads best before you set it.';
-const canonical = new URL(Astro.url.pathname, SITE).href;
-const ogImage = new URL('og-image.png', SITE).href;
+// Normalize BASE_URL to a guaranteed trailing slash — with build.format:'file'
+// Astro emits it without one ('/ghostty-themes'), which would glue onto the
+// next segment ('/ghostty-themesog-image.png'). With the slash, both the
+// canonical and the OG image resolve cleanly under the sub-path.
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const canonical = new URL(base, SITE).href;
+const ogImage = new URL(`${base}og-image.png`, SITE).href;
 const ogImageAlt = 'GHOSTTY × CLAUDE CODE — Theme Visualizer, with a mock Claude Code terminal session.';
 ---
 

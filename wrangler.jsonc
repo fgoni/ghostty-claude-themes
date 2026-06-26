@@ -1,19 +1,39 @@
 {
   // Cloudflare Workers — static assets only (no server code). `wrangler deploy`
-  // uploads the built Astro site in ./dist and serves it from the edge at the
-  // custom domain below.
+  // uploads the built Astro site in ./dist and serves it from the edge.
+  // Mounted at a sub-path of the apex zone (facundogoni.com.ar/ghostty-themes):
+  // the build nests files under dist/ghostty-themes/, so a request to
+  // /ghostty-themes/... maps 1:1 to dist/ghostty-themes/... with no rewriting.
+  // Two route patterns per host are needed: the bare path (no trailing slash)
+  // and the wildcard — `/ghostty-themes/*` does not match `/ghostty-themes` on
+  // its own. Both apex and www are covered because the main site's canonical
+  // host is www (apex 301s to www); without the www routes, www/ghostty-themes
+  // falls through to the main site's SPA catch-all and serves the wrong HTML.
+  // These most-specific routes win over whatever serves the `/*` of each host.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cc-themes-for-ghostty",
   "account_id": "a2bb03992bcaf931e19199e7d4b45f68",
   "compatibility_date": "2026-06-01",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "none"
   },
   "routes": [
     {
-      "pattern": "cc-themes-for-ghostty.facundogoni.com.ar",
-      "custom_domain": true
+      "pattern": "facundogoni.com.ar/ghostty-themes",
+      "zone_name": "facundogoni.com.ar"
+    },
+    {
+      "pattern": "facundogoni.com.ar/ghostty-themes/*",
+      "zone_name": "facundogoni.com.ar"
+    },
+    {
+      "pattern": "www.facundogoni.com.ar/ghostty-themes",
+      "zone_name": "facundogoni.com.ar"
+    },
+    {
+      "pattern": "www.facundogoni.com.ar/ghostty-themes/*",
+      "zone_name": "facundogoni.com.ar"
     }
   ]
 }
